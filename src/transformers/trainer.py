@@ -771,9 +771,19 @@ class Trainer:
             dataset.set_format(
                 type=dataset.format["type"], columns=columns, format_kwargs=dataset.format["format_kwargs"]
             )
-            return dataset
+            filtered_dataset = dataset
         else:
-            return dataset.remove_columns(ignored_columns)
+            filtered_dataset = dataset.remove_columns(ignored_columns)
+
+        if len(filtered_dataset.column_names) == 0:
+            dset_description = "" if description is None else f"in the {description} set"
+            logger.warning(
+                f"The provided dataset does not contain any columns {dset_description} matching a corresponding argument in "
+                f"`{self.model.__class__.__name__}.forward`. As a result, the dataset is empty, which may lead to unexpected behavior. "
+                f"If this is intentional, you can safely ignore this message."
+            )
+
+        return filtered_dataset
 
     def _get_collator_with_removed_columns(
         self, data_collator: Callable, description: Optional[str] = None
